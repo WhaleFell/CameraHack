@@ -36,7 +36,7 @@ def get_cve(ip: str, save_path: Path) -> bool:
             if res.status_code != 200:
                 logger.info(f"[-] {ip} hikvison漏洞失败,请求码:{res.status_code}")
                 return False
-            with save_path.open(mode="wb") as fp:
+            with Path(save_path, f"{ip}.jpg").open(mode="wb") as fp:
                 fp.write(res.content)
                 logger.success(f"[+] {ip} hikvison漏洞利用成功!")
                 return True

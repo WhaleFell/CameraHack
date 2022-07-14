@@ -16,7 +16,7 @@ from dahua.payload import get_cve as dh_get_cve
 basepath = Path(__file__).parent.absolute()
 res_file = Path(basepath, "res.txt")
 
-photo = Path(basepath, "photo")
+photo = Path(r"C:\Users\WhaleFall\Desktop", "py_photo")
 photo.mkdir(exist_ok=True)
 
 easy_rtsp = Path(photo, "easy_rtsp")
@@ -72,14 +72,15 @@ def rtsp(ip: str) -> bool:
 
     if easy_res:
         save_res(f"[+] {ip}存在{easy_res[1]}")
+        return True
     elif hk_get_rtsp(ip, hk_rtsp):
         save_res(f"[+] {ip}存在海康威视弱密码!")
+        return True
     elif dh_get_rtsp(ip, dh_rtsp):
         save_res(f"[+] {ip}存在大华弱密码!")
+        return True
     else:
         return False
-
-    return True
 
 
 def web(ip: str) -> bool:
@@ -91,12 +92,12 @@ def web(ip: str) -> bool:
     # 4. 开始尝试 cve 漏洞！
     if hk_get_cve(ip, hk_cve):
         save_res(f"[+] {ip}存在海康威视漏洞!")
+        return True
     elif dh_get_cve(ip):
         save_res(f"[+] {ip}存在大华web漏洞!")
+        return True
     else:
         return False
-
-    return True
 
 
 def payload(ip: str):
@@ -111,8 +112,10 @@ def payload(ip: str):
 
 
 def main():
-    for ip in load_ips():
-        payload(ip)
+    with ThreadPoolExecutor(max_workers=20) as pool:
+        for ip in load_ips():
+            # payload(ip)
+            pool.submit(payload, ip)
 
 
 if __name__ == "__main__":

@@ -114,7 +114,7 @@ def run_cmd(cmd: str, timeout: int = 5):
         # 在 Windows 上，os.killpg将不起作用，因为它向进程 ID 发送信号以终止。这就是你现在如何在 Windows 上终止进程，而你必须使用 win32 API 的 TerminateProcess杀死一个进程。
         # os.killpg(p.pid, signal.SIGTERM)
         # idea: https://www.coder.work/article/1251420
-        os.kill(p.pid, signal.CTRL_C_EVENT)
+        # os.kill(p.pid, signal.CTRL_C_EVENT)
         # 如果开启下面这两行的话，会等到执行完成才报超时错误，但是可以输出执行结果
         # (outs, errs) = p.communicate()
         # print(outs.decode('utf-8'))
