@@ -159,7 +159,7 @@ class Dahua(object):
 
     async def async_run(self):
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=False)
+            browser = await p.chromium.launch(headless=True)
             while not self.queue.empty():
                 addr = self.queue.get()
                 if await self.get_token(addr):
