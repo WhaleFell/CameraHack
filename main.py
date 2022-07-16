@@ -118,10 +118,37 @@ def main():
             pool.submit(payload, ip)
 
 
+def write_res(path: Path, msg):
+    with path.open(mode="a", encoding="utf8") as fp:
+        fp.write(msg+"\n")
+
+
+def handle_macsan_json(path: Union[Path, str]) -> None:
+    """处理 macsan 的 json 数据"""
+    with Path(path).open(mode="r", encoding="utf8") as fp:
+        j_obj = json.loads(s=fp.read())
+    p_3306 = Path(basepath, "p_3306.txt")
+    p_21 = Path(basepath, "p_21.txt")
+    p_22 = Path(basepath, "p_22.txt")
+    p_3389 = Path(basepath, "p_3389.txt")
+    p_5900 = Path(basepath, "p_5900")
+
+    for j in j_obj:
+        if j["ports"][0]["port"] == 3306:
+            write_res(p_3306, j["ip"])
+        elif j["ports"][0]["port"] == 21:
+            write_res(p_21, j["ip"])
+        elif j["ports"][0]["port"] == 22:
+            write_res(p_22, j["ip"])
+        else:
+            pass
+
+
 if __name__ == "__main__":
     # handle_macsan_json(Path(basepath, "allsst.json"))
     # payload("10.1.6.100")  # 正常获取
     # payload("10.1.9.235")  # 异常
-    main()
+    # main()
     # run_cmd("ping baidu.com")
+    handle_macsan_json(Path(basepath, "servserall.json"))
     pass
