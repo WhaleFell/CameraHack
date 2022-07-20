@@ -7,7 +7,6 @@ from utils.log import logger
 from dahua.bypass import Payload
 from pathlib import Path
 import httpx
-import os
 
 
 def get_rtsp(ip: str, save_path: Path) -> bool:

