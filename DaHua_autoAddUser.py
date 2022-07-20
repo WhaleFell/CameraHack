@@ -33,6 +33,14 @@ keyConfigs = [
         "yhgl_xpath": '[t="sys.Account"]',
         "adduser_xpath": '[t="sys.AddUser"]',
         "save_xpath": 'xpath=/html/body/div[16]/div[3]/a[1]'
+    },
+    # 方案三
+    {
+        "set_xpath": '[t="com.Setting"]',
+        "xtgl_xpath": '[t="sys.SysManage"]',
+        "yhgl_xpath": '[t="sys.Account"]',
+        "adduser_xpath": '[t="sys.AddUser"]',
+        "save_xpath": 'xpath=/html/body/div[17]/div[3]/a[1]'
     }
 ]
 
