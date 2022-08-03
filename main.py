@@ -131,7 +131,8 @@ def handle_macsan_json(path: Union[Path, str]) -> None:
     p_21 = Path(basepath, "p_21.txt")
     p_22 = Path(basepath, "p_22.txt")
     p_3389 = Path(basepath, "p_3389.txt")
-    p_5900 = Path(basepath, "p_5900")
+    p_5900 = Path(basepath, "p_5900.txt")
+    p_8080 = Path(basepath, "p_8080.txt")
 
     for j in j_obj:
         if j["ports"][0]["port"] == 3306:
@@ -140,6 +141,12 @@ def handle_macsan_json(path: Union[Path, str]) -> None:
             write_res(p_21, j["ip"])
         elif j["ports"][0]["port"] == 22:
             write_res(p_22, j["ip"])
+        elif j["ports"][0]["port"] == 3389:
+            write_res(p_3389, j["ip"])
+        elif j["ports"][0]["port"] == 5900:
+            write_res(p_5900, j["ip"])
+        elif j["ports"][0]["port"] == 8080:
+            write_res(p_8080, j["ip"])
         else:
             pass
 
